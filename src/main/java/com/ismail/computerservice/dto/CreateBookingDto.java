@@ -18,6 +18,7 @@ public class CreateBookingDto {
     }
 
     public CreateBookingDto() {
+
     }
 
     public String getNote() {
