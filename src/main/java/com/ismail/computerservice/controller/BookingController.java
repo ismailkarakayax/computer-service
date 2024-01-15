@@ -3,6 +3,7 @@ package com.ismail.computerservice.controller;
 import com.ismail.computerservice.dto.CreateBookingDto;
 import com.ismail.computerservice.model.Booking;
 import com.ismail.computerservice.service.BookingService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,7 +23,7 @@ public class BookingController {
     @PostMapping("/create")
     public ResponseEntity<Booking> createBooking(@RequestBody CreateBookingDto createBookingDto) {
         Booking booking = bookingService.createBooking(createBookingDto);
-        return ResponseEntity.ok(booking);
+            return new ResponseEntity<>(booking, HttpStatus.CREATED);
 
     }
 }

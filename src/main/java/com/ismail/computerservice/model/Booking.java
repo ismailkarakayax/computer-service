@@ -2,21 +2,20 @@ package com.ismail.computerservice.model;
 
 import jakarta.persistence.*;
 
-import java.security.Provider;
-import java.time.LocalDateTime;
+import java.util.Date;
+
 
 @Entity
 @Table(name="\"BOOKING\"")
 public class Booking {
-
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
-
     @Column(name = "note")
     private String note;
     @Column(name = "booking_date")
-    private LocalDateTime bookingDate;
+    private Date bookingDate;
     @Column(name = "status")
     private Boolean status;
 
@@ -28,7 +27,7 @@ public class Booking {
     @JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false)
     private User user;
 
-    public Booking(Long id, String note, LocalDateTime bookingDate, Boolean status, Repair repair, User user) {
+    public Booking(Long id, String note, Date bookingDate, Boolean status, Repair repair, User user) {
         this.id = id;
         this.note = note;
         this.bookingDate = bookingDate;
@@ -56,11 +55,11 @@ public class Booking {
         this.note = note;
     }
 
-    public LocalDateTime getBookingDate() {
+    public Date getBookingDate() {
         return bookingDate;
     }
 
-    public void setBookingDate(LocalDateTime bookingDate) {
+    public void setBookingDate(Date bookingDate) {
         this.bookingDate = bookingDate;
     }
 

@@ -1,15 +1,15 @@
 package com.ismail.computerservice.dto;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 public class CreateBookingDto {
     private String note;
-    private LocalDate bookingDate;
+    private Date bookingDate;
     private Boolean status;
     private Long repairId;
     private Long userId;
 
-    public CreateBookingDto(String note, LocalDate bookingDate, Boolean status, Long repairId, Long userId) {
+    public CreateBookingDto(String note, Date bookingDate, Boolean status, Long repairId, Long userId) {
         this.note = note;
         this.bookingDate = bookingDate;
         this.status = status;
@@ -29,11 +29,11 @@ public class CreateBookingDto {
         this.note = note;
     }
 
-    public LocalDate getBookingDate() {
+    public Date getBookingDate() {
         return bookingDate;
     }
 
-    public void setBookingDate(LocalDate bookingDate) {
+    public void setBookingDate(Date bookingDate) {
         this.bookingDate = bookingDate;
     }
 
