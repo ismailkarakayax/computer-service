@@ -9,9 +9,6 @@ import com.ismail.computerservice.repository.RepairRepository;
 import com.ismail.computerservice.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -32,42 +29,72 @@ public class BookingService {
     public Booking createBooking(CreateBookingDto createBookingDto) {
 
         //Randevu alınan Repairi getir
-        Repair repair= repairRepository.findById(createBookingDto.getRepairId())
-                .orElseThrow(() -> new RuntimeException("Repair not found"));
+        Repair repair= getRepairById(createBookingDto.getRepairId());
 
         //Randevu alan User getir
-        User user = userRepository.findById(createBookingDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+        User user = getUserById(createBookingDto.getUserId());
 
         //Randevu alınan tarihdeki tüm bookingdateleri getir
-        List<Booking> bookingsToday= bookingRepository.findByBookingDate(createBookingDto.getBookingDate());
+        List<Booking> bookingsLastDay= getBookingsLastDay();
 
         //Dtoları gir
-        Booking booking = new Booking();
-
-        booking.setNote(createBookingDto.getNote());
-        booking.setBookingDate(createBookingDto.getBookingDate());
-        booking.setStatus(false);
-        booking.setRepair(repair);
-        booking.setUser(user);
+        Booking booking = createBookingEntity(createBookingDto, repair, user);
 
         //O gün alınan toplam randevu süresi 10 saati geçiyor mu
         int dailyLimit = 10;
 
-        if(!isTotalDurationWithinLimit(bookingsToday,repair.getDuration(), dailyLimit)) {
+        if(!isTotalDurationWithinLimit(bookingsLastDay,repair.getDuration(), dailyLimit)) {
             // Try to book for the next day
-            Date nextDay = getNextDay(createBookingDto.getBookingDate());
-            List<Booking> bookingsNextDay = bookingRepository.findByBookingDate(nextDay);
+            Date nextAvaliableDate = getNextDay(bookingRepository.findMaxBookingDate());
+            List<Booking> bookingsNextDay = bookingRepository.findByBookingDate(nextAvaliableDate);
 
             // Bir sonraki güne de randevu alabiliyorsa, tarihi güncelle
             if (isTotalDurationWithinLimit(bookingsNextDay, repair.getDuration(), dailyLimit)) {
-                booking.setBookingDate(nextDay);
+                booking.setBookingDate(nextAvaliableDate);
             } else {
                 throw new IllegalArgumentException("Cannot book appointment due to exceeding the daily limit");
             }
         }
         return bookingRepository.save(booking);
     }
+
+    //Repairid ye göre repair nesnesini bulur
+    private Repair getRepairById(Long repairId) {
+        return repairRepository.findById(repairId)
+                .orElseThrow(() -> new RuntimeException("Repair not found"));
+    }
+
+    //Userid ye göre user nesnesini bulur
+    private User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    //En güncel tarihdeki tüm randevuları getirir
+    private List<Booking> getBookingsLastDay(){
+        return bookingRepository.findBookingsOnLastDay();
+    }
+
+    //Booking nesnesini oluştur
+    private Booking createBookingEntity(CreateBookingDto createBookingDto, Repair repair, User user) {
+        Booking booking = new Booking();
+        booking.setNote(createBookingDto.getNote());
+        booking.setBookingDate(bookingRepository.findMaxBookingDate());
+        booking.setStatus(false);
+        booking.setRepair(repair);
+        booking.setUser(user);
+        return booking;
+    }
+
+    //Yarın metodu
+    public Date getNextDay(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.DAY_OF_MONTH, 1);
+        return calendar.getTime();
+    }
+
+
     //O gün alınan toplam randevu şüresi 10 saati geçiyor mu metodu
     public boolean isTotalDurationWithinLimit(List<Booking> bookingsToday, int repairDuration,int dailyLimit) {
         int totalDurationForDay = repairDuration;// Randevu alınan repair saati
@@ -77,12 +104,9 @@ public class BookingService {
         }
         return totalDurationForDay <= dailyLimit;
     }
-
-    public Date getNextDay(Date date) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.add(Calendar.DAY_OF_MONTH, 1);
-        return calendar.getTime();
-    }
-
 }
+
+
+
+
+

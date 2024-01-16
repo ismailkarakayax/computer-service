@@ -49,6 +49,25 @@ public class SaleService {
         }
     }
 
+    public List<Sale> getAllSales() {
+        return saleRepository.findAll();
+    }
+
+    public Sale deleteSaleById(Long id) {
+        try {
+            Sale sale = saleRepository.findById(id).get();
+            saleRepository.delete(sale);
+            return sale;
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to delete sale: ",e);
+        }
+    }
+
+    public List<Sale> getSalesByProductId(Long productId) {
+        return saleRepository.findByProductId(productId);
+    }
+
 
 
 }
