@@ -53,6 +53,7 @@ public class SaleService {
         return saleRepository.findAll();
     }
 
+
     public Sale deleteSaleById(Long id) {
         try {
             Sale sale = saleRepository.findById(id).get();

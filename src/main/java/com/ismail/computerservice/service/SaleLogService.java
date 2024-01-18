@@ -26,31 +26,44 @@ public class SaleLogService {
 
     public SaleLog createSaleLog(CreateSaleLogDto createSaleLogDto) {
         try {
-            Sale sale = saleRepository.findById(createSaleLogDto.getSaleId())
-                    .orElseThrow(() -> new RuntimeException("Satış bulunamadı"));
-
-            // Kullanıcıyı ID üzerinden bul
-            User user = userRepository.findById(createSaleLogDto.getUserId())
-                    .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
-
-            LocalDateTime purchaseDate = LocalDateTime.now();
-
-            // Yeni SaleLog nesnesi oluştur
-            SaleLog saleLog = new SaleLog();
-
-            saleLog.setCreditCard(createSaleLogDto.getCreditCard());
-            saleLog.setSale(sale);
-            saleLog.setUser(user);
-            saleLog.setDate(purchaseDate);
-
+            Sale sale = createSaleEntity(createSaleLogDto);
+            User user = createUserEntity(createSaleLogDto);
             // SaleLog'u kaydet
-            return saleLogRepository.save(saleLog);
+            SaleLog saleLog = createSaleLogEntity(createSaleLogDto, sale, user);
+            
+            deleteSaleAfterSaleLog(createSaleLogDto);
+
+            return saleLog;
 
         } catch (Exception e) {
             throw new RuntimeException("Failed to create saleLog: ",e);
         }
     }
 
+    private SaleLog createSaleLogEntity(CreateSaleLogDto createSaleLogDto, Sale sale, User user) {
+        LocalDateTime purchaseDate = LocalDateTime.now();
+        SaleLog saleLog = new SaleLog();
+        saleLog.setCreditCard(createSaleLogDto.getCreditCard());
+        saleLog.setSale(sale);
+        saleLog.setUser(user);
+        saleLog.setDate(purchaseDate);
+        return saleLog;
+    }
+
+    private Sale createSaleEntity(CreateSaleLogDto createSaleLogDto) {
+        return saleRepository.findById(createSaleLogDto.getSaleId())
+                .orElseThrow(() -> new RuntimeException("Satış bulunamadı"));
+
+    }
+
+    private User createUserEntity(CreateSaleLogDto createSaleLogDto) {
+        return userRepository.findById(createSaleLogDto.getUserId())
+                .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
+    }
+
+    private void deleteSaleAfterSaleLog(CreateSaleLogDto createSaleLogDto) {
+        saleRepository.deleteById(createSaleLogDto.getSaleId());
 
 
+    }
 }

@@ -70,6 +70,17 @@ public class BookingService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    private void deleteBookingById(Long bookingId) {
+        bookingRepository.deleteById(bookingId);
+    }
+
+    private Booking updateBookingStatus(Long bookingId, boolean status) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        booking.setStatus(status);
+        return bookingRepository.save(booking);
+    }
+
     //En güncel tarihdeki tüm randevuları getirir
     private List<Booking> getBookingsLastDay(){
         return bookingRepository.findBookingsOnLastDay();

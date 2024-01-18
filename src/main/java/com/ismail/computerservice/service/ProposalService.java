@@ -10,6 +10,8 @@ import com.ismail.computerservice.repository.ProposalRepository;
 import com.ismail.computerservice.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class ProposalService {
 
@@ -46,7 +48,29 @@ public class ProposalService {
         catch (Exception e) {
             throw new RuntimeException("Failed to create proposal: ",e);
         }
+    }
 
+    public List<Proposal> getAllProposals(){
+        return proposalRepository.findAll();
+    }
 
+    public List<Proposal> getProposalByUserId(Long userId){
+        return proposalRepository.findAllByUserId(userId);
+    }
+
+    public Proposal getProposalById(Long id){
+        return proposalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Teklif bulunamadı"));
+    }
+
+    public Proposal updateProposalStatus(Long id){
+        Proposal proposal = proposalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Teklif bulunamadı"));
+        proposal.setStatus(true);
+        return proposalRepository.save(proposal);
+    }
+
+    public void deleteProposalById(Long id){
+        proposalRepository.deleteById(id);
     }
 }
