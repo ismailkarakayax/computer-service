@@ -1,6 +1,5 @@
 package com.ismail.computerservice.service;
 
-import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import com.ismail.computerservice.dto.CreateProposalDto;
 import com.ismail.computerservice.model.Product;
 import com.ismail.computerservice.model.Proposal;
@@ -28,20 +27,11 @@ public class ProposalService {
 
     public Proposal createProposal(CreateProposalDto createProposalDto) {
         try{
-            Proposal newProposal= new Proposal();
-
-
             User user = userRepository.findById(createProposalDto.getUserId())
                     .orElseThrow(() -> new RuntimeException("Kullanıcı bulunamadı"));
-
             Product product= productRepository.findById(createProposalDto.getProductId())
                     .orElseThrow(() -> new RuntimeException("Urun bulunamadı"));
-
-            newProposal.setNote(createProposalDto.getNote());
-            newProposal.setPrice(createProposalDto.getPrice());
-            newProposal.setStatus(false);
-            newProposal.setUser(user);
-            newProposal.setProduct(product);
+            Proposal newProposal = createProposalEntity(createProposalDto,user,product);
 
             return proposalRepository.save(newProposal);
         }
@@ -50,12 +40,17 @@ public class ProposalService {
         }
     }
 
-    public List<Proposal> getAllProposals(){
-        return proposalRepository.findAll();
+    public List<Proposal> getProposalByUserId(Long id){
+        try{
+            return proposalRepository.findAllByUserId(id);
+        }
+        catch (Exception e) {
+            throw new RuntimeException("Failed to get proposal by user id: ",e);
+        }
     }
 
-    public List<Proposal> getProposalByUserId(Long userId){
-        return proposalRepository.findAllByUserId(userId);
+    public List<Proposal> getAllProposals(){
+        return proposalRepository.findAll();
     }
 
     public Proposal getProposalById(Long id){
@@ -70,7 +65,18 @@ public class ProposalService {
         return proposalRepository.save(proposal);
     }
 
-    public void deleteProposalById(Long id){
+    public Proposal deleteProposalById(Long id){
         proposalRepository.deleteById(id);
+        return null;
+    }
+
+    public Proposal createProposalEntity(CreateProposalDto createProposalDto, User user, Product product){
+        Proposal newProposal= new Proposal();
+        newProposal.setNote(createProposalDto.getNote());
+        newProposal.setPrice(createProposalDto.getPrice());
+        newProposal.setStatus(false);
+        newProposal.setUser(user);
+        newProposal.setProduct(product);
+        return newProposal;
     }
 }

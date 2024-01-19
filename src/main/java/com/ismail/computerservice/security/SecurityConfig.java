@@ -1,63 +1,69 @@
 package com.ismail.computerservice.security;
 
+import com.ismail.computerservice.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
-    @Bean
-    public BCryptPasswordEncoder passwordEncoder(){
-        return new BCryptPasswordEncoder();
+    private final JwtAuthFilter jwtAuthFilter;
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, UserService userService, PasswordEncoder passwordEncoder) {
+        this.jwtAuthFilter = jwtAuthFilter;
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
-
     @Bean
-    public UserDetailsService users(BCryptPasswordEncoder passwordEncoder) {
-
-
-        UserDetails user1 = User.builder()
-                .username("ismail")
-                .password(passwordEncoder.encode("1234"))
-                .roles("USER")
-                .build();
-
-        UserDetails user2 = User.builder()
-                .username("admin")
-                .password(passwordEncoder.encode("1234"))
-                .roles("ADMIN")
-                .build();
-
-        return new InMemoryUserDetailsManager(user1, user2);
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity security) throws Exception {
-        security
-
-                .headers(x -> x.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .formLogin(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(x -> x
-                        .requestMatchers("/**").permitAll())
-                .authorizeHttpRequests(x -> x.anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults());
-
-        return security.build();
+                .authorizeHttpRequests(x ->
+                        x.requestMatchers("/booking/user/**").hasAuthority("ROLE_USER")
+                        .requestMatchers("/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/booking/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/sale/admin/**").hasAuthority("ROLE_ADMIN")
+                        .anyRequest().permitAll()
+                )
+                .sessionManagement(x -> x.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
     }
+
+
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userService);
+        authProvider.setPasswordEncoder(passwordEncoder);
+        return authProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+
+        return configuration.getAuthenticationManager();
+    }
+
 }

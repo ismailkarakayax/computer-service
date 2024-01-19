@@ -7,6 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Set;
+
 @RestController
 @RequestMapping("/api/v1/user")
 public class UserController {
@@ -24,10 +27,17 @@ public class UserController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<User>> getAllUsers() {
+        return new ResponseEntity<>(userService.getAllUsers(), HttpStatus.OK);
+    }
+
     @PostMapping("/create")
     public ResponseEntity<User> createUser(@RequestBody CreateUserRequestDto request) {
         User newUser = userService.createUser(request);
         return new ResponseEntity<>(newUser, HttpStatus.CREATED);
     }
+
+
 
 }

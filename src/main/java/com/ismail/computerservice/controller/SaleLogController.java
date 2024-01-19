@@ -16,15 +16,20 @@ public class SaleLogController {
 
     private final SaleLogService saleLogService;
 
-
     public SaleLogController(SaleLogService saleLogService) {
         this.saleLogService = saleLogService;
     }
 
-    @PostMapping("/create")
+    @PostMapping("/buy")
     public ResponseEntity<SaleLog> createSaleLog(@RequestBody CreateSaleLogDto createSaleLogDto) {
-        SaleLog saleLog = saleLogService.createSaleLog(createSaleLogDto);
-        return new ResponseEntity<>(saleLog, HttpStatus.CREATED);
+        try{
+            SaleLog saleLog = saleLogService.createSaleLog(createSaleLogDto);
+            return new ResponseEntity<>(saleLog, HttpStatus.CREATED);
+        }
+        catch (Exception e){
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
 
     }
 }
